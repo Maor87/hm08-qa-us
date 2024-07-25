@@ -5,10 +5,10 @@ module.exports = {
     phoneNumberField: '#phone',
     codeField: '#code',
     // Buttons
-    callATaxiButton: 'button=Call a taxi',
+    callATaxiButton: '//button[contains(text(), "Call a taxi")]',
     phoneNumberButton: '//div[starts-with(text(), "Phone number")]',
-    nextButton: 'button=Next',
-    confirmButton: 'button=Confirm',
+    nextButton: '//button[contains(text(), "Next")]',
+    confirmButton: '//button[contains(text(), "Confirm")]',
     // Modals
     phoneNumberModal: '.modal',
     // Functions
