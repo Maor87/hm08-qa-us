@@ -8,8 +8,8 @@ describe('Create an order', () => {
         const phoneNumberButton = await $(page.phoneNumberButton);
         await phoneNumberButton.waitForDisplayed();
         await phoneNumberButton.click();
-        const pnoneNumberModal = await $(page.phoneNumberModal);
-        await expect(pnoneNumberModal).toBeExisting();
+        const phoneNumberModal = await $(page.phoneNumberModal);
+        await expect(phoneNumberModal).toBeExisting();
     })
 
     it('should save the phone', async () => {
@@ -36,6 +36,7 @@ describe('Create an order', () => {
 
      it('Taxi Plan Selection', async () => {
         await browser.url('/');
+        await page.fillAddresses('East 2nd Street, 601', '1300 1st St');
 
         await browser.pause(2000);
 
@@ -55,54 +56,101 @@ describe('Create an order', () => {
 
      it('Filling in the phone number, input field', async () => {
         await browser.url('/');
+        await page.fillAddresses('East 2nd Street, 601', '1300 1st St');
 
-        // Wait for the phone input field to exist and be displayed
-        const fillNumber = await $('.input');
-        await fillNumber.waitForExist({ timeout: 3000 });
-        await fillNumber.waitForDisplayed({ timeout: 3000});
+        // phone number fill process
+        const phoneNumberModal = await $(page.phoneNumberModal);
+        await expect(phoneNumberModal).toBeExisting();
 
-        // Fill the input with phone number
-        await fillNumber.setValue('+1 234 567 89 07');
-
-        // Verify the phone number entered correctly
-        const enteredValue = await fillNumber.getValue();
-        expect(enteredValue).toBe('+1 234 567 89 07');
+        // saving the phone number
+        const phoneNumber = helper.getPhoneNumber("+1");
+        await page.submitPhoneNumber(phoneNumber);
+        await expect(await helper.getElementByText(phoneNumber)).toBeExisting();
      });
 
 
-     it('Credit Card number entry', async () => {
-  await browser.url('/')
-  await page.fillAddresses('East 2nd Street, 601', '1300 1st St')
+    it('Credit Card number entry', async () => {
+    await browser.url('/');
+    await page.fillAddresses('East 2nd Street, 601', '1300 1st St');
 
-  // Click "Call a taxi" button
-  await $(page.callATaxiButton).waitForClickable({ timeout: 10000 });
+   //  // Wait for overlay to disappear before clicking the button
+   //  const overlay = await $('.workflow-subcontainer');
+   //  await overlay.waitForDisplayed({ timeout: 10000, reverse: true });
 
-  // Wait for taxi options modal to appear
-  await $('div.tcard.active').waitForDisplayed({ timeout: 10000 });
+     // this class: 'tcard' selects all taxi plans different types of taxi's
+     const firstTaxiPlan = await $$('.tariff-cards')[0];
 
-  // phone number message button, then popup
-  await $(page.phoneNumberButton).waitForClickable({ timeout: 10000});
+    // Ensure the element is in view
+    await firstTaxiPlan.scrollIntoView();
 
-  // input phone number in popup window
-  await $('#phone').setValue('+1 234 456 78 90');
-  await $(page.nextButton).waitForClickable({ timeout: 10000});
-  await $(page.confirmButton).waitForClickable({ timeout: 10000});
+        // Use JavaScript to click the element, approach helps bypass any issues with elements being obscured 
+        await browser.execute("arguments[0].click();", firstTaxiPlan);
 
-  // Fill credit card info
-  await $('input.card-input').setValue('1234 0000 5678')
-  await $('#code').setValue('19')
+        // Verify taxi plan, the message popup
+        const confirmMessagePopup = await $('.order-body');
+        expect(confirmMessagePopup).toBeDisplayed();
 
-  // Click Submit and then Cancel buttons
-  await $('//button[contains(text(), "Link")]').click()
-  await $('//button[contains(text(), "Cancel")]').click()
-})
+    // phone number process and model
+      const phoneNumberModal = await $(page.phoneNumberModal);
+      await expect(phoneNumberModal).toBeExisting();
+
+      // saving phone number
+      const phoneNumber = helper.getPhoneNumber("+1");
+      await page.submitPhoneNumber(phoneNumber);
+      await expect(await helper.getElementByText(phoneNumber)).toBeExisting();
+
+    // Click the payment option button
+    const paymentMethodButton = await $('div.pp-button.filled');
+    await paymentMethodButton.waitForClickable({ timeout: 10000 });
+    await paymentMethodButton.click();
+
+    // Ensure the payment method popup picker is open
+    const overlay = await $('.overlay');
+    await expect(overlay).toBeExisting();
+    const paymentMethodPopup = await $('.section.active');
+    await expect(paymentMethodPopup).toBeExisting();
+
+    // Click on the credit card option in the first popup
+    const creditCardOption = await $('.pp-row');
+    await creditCardOption.waitForClickable({ timeout: 10000 });
+    await creditCardOption.click();
+
+    // Ensure the second popup for credit card info is open
+    const secondOverlay = await $('.overlay');
+    await expect(secondOverlay).toBeExisting();
+    const creditCardInfoPopup = await $('.section');
+    await expect(creditCardInfoPopup).toBeExisting();
+
+    // info card wrapper of the popup
+    const infoWrapper = await $('.card-wrapper');
+    await infoWrapper.scrollIntoView();
+    await expect(infoWrapper).toBeExisting();
+
+    // Fill in the credit card number
+    const cardInput = await $('#number');
+    await cardInput.scrollIntoView();
+    await cardInput.setValue('1234 0000 4321');
+
+    // Fill in the CVV code and change focus
+    const codeInput = await $('input#code.card-input');
+    await codeInput.scrollIntoView();
+    await codeInput.setValue('12');
+
+    // Click the "Link" button to submit
+    const linkButton = await $('//button[contains(text(), "Link")]');
+    await linkButton.waitForClickable({ timeout: 10000 });
+    await linkButton.click();
+
+});
+
    
      it('Write a message for the driver input', async () => {
         await browser.url('/');
+        await page.fillAddresses('East 2nd Street, 601', '1300 1st St');
 
         // Input field and enter a message to driver
         const messageDriverInput = await $('.input');
-        const messageDriver = 'get me coffee please';
+        const messageDriver = 'Get some whiskey';
         await messageDriverInput.setValue(messageDriver);
 
         // Verify the message was entered correctly
